@@ -22,40 +22,29 @@
 ## can cache its inverse. Both the matrix and its inverse
 ## have version counter to keep track of versioning.
 
-makeCacheMatrix <- function( m = matrix()) {
-  ## This function make a square matrix with
+makeCacheMatrix <- function( m = NULL, dimension = 2) {
+  ## This function make a sqaure matrix with
   ## dimension and stores the matrix in its own cache.
   ## In addition, this function provide method
   ## to set and get the inverse matrix 
   ## 
-  invm <- NULL
-  ## increment counter to keep track the version of matrix m
-  ## and the version of inverse.
-  mCounters <- 0
-  iCounters <- 0
-  ## Stores the matrix to the cache
-  ## and increments the version counter by one.
-  setMatrix <- function(y){
-    m <<- y
-    invm <<- NULL
-    mCounters <<- mCounters + 1
-    ## print(mCounters)
-  }
-  ## Returns TRUE if both counters are identical.
-  isSync <- function(){
-    ## print(mCounters)
-    ## print(iCounters)
-    if(mCounters == iCounters){
-      TRUE
+  ## default dimension
+  if(is.null(m)){
+    set.seed(99)
+    if(dimension > 1){
+      m <- matrix(rnorm(dimension^2), dimension, dimension)
     }else{
-      FALSE
+      m <- matrix()
     }
   }
-  ## Retrieve the matrix from the cache
-  getMatrix <- function(){
-    ##  print(mCounters)
-    m
-  } 
+  invm <- NULL
+  ## set the matrix m to y and null the inverse
+  set <- function(y){
+    m <<- y
+    invm <<- NULL
+  }
+  ## Return the matrix m
+  get <- function()  m
   ## optional function to create a square matrix
   ## with random values for ease of testing purpose
   ## The original assigment requirement does not
@@ -66,25 +55,17 @@ makeCacheMatrix <- function( m = matrix()) {
     }
     set.seed(99)
     m <- matrix(rnorm(dimension^2), dimension, dimension)
-  
   }
-  ## Stores the inverse of the matrix and
-  ## increments the counter by one
   setInverse <- function(inv){
     invm <<- inv
-    iCounters <<- iCounters + 1
-    ## print(iCounters)
-  }
-  ## Retrieve the inverse matrix.  
+  } 
   getInverse <- function(){
-    ##  print(iCounters)
     invm
   }
-  ## a special patrix with list of methods
-  list(setMatrix = setMatrix, 
-       getMatrix = getMatrix,
+  ## return a square matrix with random numbers
+  list(set = set, 
+       get = get,
        createMatrix = createMatrix,
-       isSync = isSync ,
        setInverse = setInverse,
        getInverse = getInverse)
 }
@@ -95,22 +76,17 @@ makeCacheMatrix <- function( m = matrix()) {
 ## calculated (and the matrix has not changed), then cacheSolve 
 ## will retrieve the inverse from the cache. 
 
-cacheSolve <- function(x){
-   ## Return a matrix that is inverse of x
-  mcache <- x$getMatrix()
-  if(is.null(mcache)){
-    message("NULL matrix data")
-    return(mcache)
-  }
+cacheSolve <- function(x, ...){
+  
   ## Does the matrix had been changed ?
-  if(x$isSync()){
-    inv <- x$getInverse()
-    message("getting cached data")
+  inv <- x$getInverse()
+  if(!is.null(inv)){
+    message("Retrieve cached inverse matrix")
     return(inv)
   }
   ## Need to compute an inverse
-  message("creating new cached data")
-  inv <- solve(mcache)
+  message("Compute inverse matrix")
+  inv <- solve(x$get(), ...)
   x$setInverse(inv)
   return(inv)
 }
